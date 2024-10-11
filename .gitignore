@@ -1,0 +1,42 @@
+# Cabal build artifacts
+dist/
+dist-newstyle/
+newdist/
+
+# Cabal project files
+cabal.project.local
+cabal.project.local.new
+cabal.project.freeze
+cabal.project.freeze.new
+
+# Haskell compiler artifacts
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.haddock
+
+# Haskell stack artifacts
+.stack-work/
+
+# Binary and executable files
+*.exe
+*.out
+*.dSYM/
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*~
+*.bak
+*.swp
