@@ -19,34 +19,56 @@ lexeme p = p <* spaces
 integerLiteral :: Parser Expr
 integerLiteral = lexeme $ Lit <$> integer
 
--- Parser for double literals with lexeme
+-- Parser for double literals 
 doubleLiteral :: Parser Expr
 doubleLiteral = lexeme $ FloatLit <$> float
-  
+
+-- Parser for variables
+variable :: Parser Expr
+variable = Var <$> lexeme (many1 letter)
 -- Parser for terms
-term :: Parser Expr
-term = try doubleLiteral <|> try integerLiteral <|> try parens
+expression :: Parser Expr
+expression = try doubleLiteral <|> try integerLiteral <|> try parens <|> variable
 
 -- Parser for addition
 addition :: Parser Expr
 addition = do
-  x <- term
+  x <- expression
   lexeme $ char '+'
-  y <- expr
+  y <- statement
   return $ Add x y
+
+-- Parser for let statement
+letStatement :: Parser Expr
+letStatement = do
+  lexeme $ string "let"
+  var <- lexeme $ many1 letter
+  lexeme $ char ':'
+  type' <- lexeme $ string "Int" <|> string "Double"
+  t <- case type' of
+    "Int" -> return IntType
+    "Double" -> return DoubleType
+    _ -> fail "Invalid type"
+  lexeme $ char '='
+  val <- statement
+  lexeme $ string "in"
+  body <- statement
+  return $ Let var t val body
 
 -- Parser for parens
 parens :: Parser Expr
 parens = do
   lexeme $ char '('
-  x <- expr
+  x <- statement
   lexeme $ char ')'
   return x
 
 -- Parser for expressions
-expr :: Parser Expr
-expr =  try addition <|> try term 
+statement :: Parser Expr
+statement =  try letStatement <|>
+             try addition <|>
+             try expression 
 
 -- parse expre
 parseExpr :: String -> Either ParseError Expr
-parseExpr = parse (spaces *> expr <* spaces) ""
+parseExpr = parse (spaces *> statement <* spaces) ""
