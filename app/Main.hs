@@ -21,6 +21,7 @@ main = do
                   print err
                   main
               Right ex  -> do
-                print $ typechecker typeCtx ex
-                print $ eval ctx ex
+                print $ ex
+                print $ inferType typeCtx ex
+                -- print $ eval ctx ex
                 main

@@ -6,54 +6,81 @@ import Expr
 import qualified Text.Parsec.Token as Tok
 import Text.Parsec.Language (emptyDef)
 
-
-lexer = Tok.makeTokenParser emptyDef
-float = Tok.float lexer
-integer = Tok.integer lexer
-
 -- lexeme
 lexeme :: Parser a -> Parser a
 lexeme p = p <* spaces
 
--- Parser for integer literals
-integerLiteral :: Parser Expr
-integerLiteral = lexeme $ Lit <$> integer
-
--- Parser for double literals 
-doubleLiteral :: Parser Expr
-doubleLiteral = lexeme $ FloatLit <$> float
-
 -- Parser for variables
 variable :: Parser Expr
 variable = Var <$> lexeme (many1 letter)
+
+-- Parser for annotations
+annotation :: Parser Expr
+annotation = do
+  x <- expression
+  lexeme $ char ':'
+  t <- typeExpr
+  return $ Ann x t
+
+-- Parser for Booleans
+boolean :: Parser Expr
+boolean = (lexeme $ string "True" >> return (BoolLit True)) <|> (lexeme $ string "False" >> return (BoolLit False))
+
 -- Parser for terms
 expression :: Parser Expr
-expression = try doubleLiteral <|> try integerLiteral <|> try parens <|> variable
+expression = try boolean <|> try variable <|> try parens
 
--- Parser for addition
-addition :: Parser Expr
-addition = do
-  x <- expression
-  lexeme $ char '+'
-  y <- statement
-  return $ Add x y
+-- Parser for basic types
+basicType :: Parser Type
+basicType = (lexeme (string "Bool") >> return BoolType)
 
--- Parser for let statement
-letStatement :: Parser Expr
-letStatement = do
-  lexeme $ string "let"
-  var <- lexeme $ many1 letter
-  lexeme $ char ':'
-  type' <- lexeme $ string "Int" <|> string "Double"
-  t <- case type' of
-    "Int" -> return IntType
-    "Double" -> return DoubleType
-    _ -> fail "Invalid type"
-  lexeme $ char '='
-  val <- statement
-  lexeme $ string "in"
+-- Parser for function types
+functionType :: Parser Type
+functionType = do
+  argType <- basicType <|> parensType
+  lexeme $ string "->"
+  returnType <- typeExpr
+  return $ FunType argType returnType
+
+-- Parser for types (basic or function)
+typeExpr :: Parser Type
+typeExpr = try functionType <|> basicType <|> parensType
+
+-- Parser for types within parentheses
+parensType :: Parser Type
+parensType = do
+  lexeme $ char '('
+  t <- typeExpr
+  lexeme $ char ')'
+  return t
+
+  
+-- Parser for if statement
+ifStatement :: Parser Expr
+ifStatement = do
+  lexeme $ string "if"
+  cond <- statement
+  lexeme $ string "then"
+  t <- statement
+  lexeme $ string "else"
+  f <- statement
+  return $ If cond t f
+
+-- Parser for functions
+function :: Parser Expr
+function = do
+  lexeme $ string "Lambda"
+  var <- variable
+  lexeme $ string "."
   body <- statement
-  return $ Let var t val body
+  return $ Abs var body
+
+-- -- Parser for function application
+-- application :: Parser Expr
+-- application = do
+--   f <- statement
+--   x <- statement
+--   return $ App f x
 
 -- Parser for parens
 parens :: Parser Expr
@@ -65,10 +92,11 @@ parens = do
 
 -- Parser for expressions
 statement :: Parser Expr
-statement =  try letStatement <|>
-             try addition <|>
-             try expression 
+statement = try annotation <|>
+            try function <|>
+            try ifStatement <|>
+            try expression
 
--- parse expre
+-- parse expr
 parseExpr :: String -> Either ParseError Expr
 parseExpr = parse (spaces *> statement <* spaces) ""

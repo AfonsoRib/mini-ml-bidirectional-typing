@@ -6,19 +6,14 @@ import Context
 
 -- Evaluate the parsed expression to an integer or double
 eval :: Context -> Expr -> Value
-eval _ (Lit n) = IntVal n
-eval _ (FloatLit n) = DoubleVal n
-eval ctx (Add x y) =
-  case (eval ctx x, eval ctx y) of
-    (IntVal n, IntVal m) -> IntVal (n + m)
-    (DoubleVal n, DoubleVal m) -> DoubleVal (n + m)
-    (IntVal n, DoubleVal m) -> DoubleVal (fromIntegral n + m)
-    (DoubleVal n, IntVal m) -> DoubleVal (n + fromIntegral m)
+eval _ (BoolLit n) = BoolVal n
 eval ctx (Var x) = case lookupVar x ctx of
   Just x -> x
   Nothing -> error "Variable not found"
-eval ctx (Let x _ e1 e2) =
-  let v1 = eval ctx e1
-      ctx' = addVar x v1 ctx
-  in
-    eval ctx' e2
+eval ctx (If cond t f) =
+  case eval ctx cond of
+    BoolVal True -> eval ctx t
+    BoolVal False -> eval ctx f
+    _ -> error "Type mismatch"
+-- Todo: implement Abs, App, and Ann
+  

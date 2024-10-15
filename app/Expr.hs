@@ -1,21 +1,19 @@
 module Expr where
 -- Define the data type for arithmetic expressions
-data Expr = Add Expr Expr
-          | Lit Integer
-          | FloatLit Double
-          | Var String
-          | Let String Type Expr Expr -- Para já o campo de type não é
-                                      -- necessário mas pode ser útil
-                                      -- no futuro para o
-                                      -- bidirectional type checking
+data Expr = Var String
+          | BoolLit Bool
+          | If Expr Expr Expr
+          | Abs Expr Expr
+          | App Expr Expr
+          | Ann Expr Type
           deriving (Show)
 
-data Type = IntType
-          | DoubleType
+data Type = BoolType
+          | FunType Type Type
           deriving (Show, Eq)
 
-data Value = IntVal Integer
-           | DoubleVal Double
+data Value = BoolVal Bool
+           | Closure String Expr Type
            deriving (Show)
 
 

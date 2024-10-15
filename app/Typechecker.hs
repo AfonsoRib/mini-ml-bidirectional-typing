@@ -4,23 +4,42 @@ import Expr
 import Parser
 import Context
 
+
 -- Evaluate the parsed expression to an integer or double
-typechecker :: TypeContext -> Expr -> Type
-typechecker _ (Lit n) = IntType
-typechecker _ (FloatLit n) = DoubleType
-typechecker ctx (Add x y) =
-  case (typechecker ctx x, typechecker ctx y) of
-    (IntType, IntType) -> IntType
-    (DoubleType, DoubleType) -> DoubleType
-    (IntType, DoubleType) -> DoubleType
-    (DoubleType, IntType) -> DoubleType
-typechecker ctx (Var x) =
+inferType :: TypeContext -> Expr -> Maybe Type
+inferType _ (BoolLit _) = Just BoolType
+inferType ctx (Var x) =
   case lookupTypeVar x ctx of
-    Just x -> x
-    Nothing -> error "Variable not found"
-typechecker ctx (Let x t e1 e2) =
-  let t1 = typechecker ctx e1
-      ctx' = addTypeVar x t1 ctx
-  in
-    if t /= t1 then error "Type mismatch" else
-    typechecker ctx' e2
+    Just x -> Just x
+    Nothing -> Nothing   
+inferType ctx (Ann e ty) = checkType ctx e ty
+inferType ctx (Abs x t) =
+  case x of
+    Ann (Var x') ty ->
+      case inferType (addTypeVar x' ty ctx) t of
+        Just ty' -> Just (FunType ty ty')
+        Nothing -> Nothing
+
+
+checkType :: TypeContext -> Expr -> Type -> Maybe Type
+checkType ctx (If t1 t2 t3) ty = 
+  case (checkType ctx t1 BoolType,
+        checkType ctx t2 ty,
+        checkType ctx t3 ty) of
+    (Just BoolType, Just ty1, Just ty2) -> Just ty
+    _ -> Nothing
+checkType ctx (Abs (Var x) body) (FunType ty1 ty2) =
+  case inferType (addTypeVar x ty1 ctx) body of
+    Just ty2' -> if ty2 == ty2' then Just (FunType ty1 ty2) else Nothing
+    Nothing -> Nothing
+checkType ctx (Abs _ _) _ = Nothing
+checkType ctx (App t1 t2) ty =
+  case
+    (inferType ctx t1,
+     checkType ctx t2 ty) of
+    (Just (FunType ty1 ty2), Just ty1') -> if ty1 == ty1' then Just ty2 else Nothing
+    _ -> Nothing
+checkType ctx t ty = 
+  case inferType ctx t of
+    Just ty' -> if ty == ty' then Just ty else Nothing
+    Nothing -> Nothing
