@@ -13,8 +13,10 @@ data Token = TTrue
            | TColon
            | TBool
            | TVar String
+           | TArrow
+           | TLambda
+           | TDot
            deriving (Show, Eq)
-
 
 trueParser :: Parser Token
 trueParser = string "true" >> return TTrue
@@ -31,8 +33,6 @@ thenParser = string "then" >> return TThen
 variableParser :: Parser Token
 variableParser = many1 letter >>= \x -> return (TVar x)
 
-
-
   
 tokenParser :: Parser Token
 tokenParser = try (string "true" >> return TTrue) <|>
@@ -42,6 +42,9 @@ tokenParser = try (string "true" >> return TTrue) <|>
               try (string "else" >> return TElse) <|>
               try (string ":" >> return TColon) <|>
               try (string "Bool" >> return TBool) <|>
+              try (string "->" >> return TArrow) <|>
+              try (string "\\" >> return TLambda) <|>
+              try (string "." >> return TDot) <|>
               try variableParser
               
 
