@@ -18,15 +18,17 @@ tokenGrammar = mdo
   trueExpr <- rule $ token TTrue *> pure (BoolLit True)
   falseExpr <- rule $ token TFalse *> pure (BoolLit False)
   ifExpr  <- rule $ If
-    <$> (token TIf *> expr)
-    <*> (token TThen *> expr)
-    <*> (token TElse *> expr)
+    <$> (token TIf *> statement)
+    <*> (token TThen *> statement)
+    <*> (token TElse *> statement)
   var <- rule $ (\(TVar x) -> Var x) <$> satisfy isVar
-  ann <- rule $ Ann <$> expr <*> (token TColon *> t)
-  abs <- rule $ Abs <$> (token TLambda *> var) <*> (token TDot *> expr)
-  app <- rule $ App <$> expr <*> expr
-  expr <- rule $ trueExpr <|> falseExpr <|> ifExpr <|> var <|> ann <|> abs <|> app  
-  return expr
+  ann <- rule $ Ann <$> statement <*> (token TColon *> t)
+  abs <- rule $ Abs <$> (token TLambda *> var) <*> (token TDot *> statement)
+  app <- rule $ App <$> statement <*> statement
+  parens <- rule $ token TLPar *> statement <* token TRPar
+  expr <- rule $ trueExpr <|> falseExpr <|> var 
+  statement <- rule $ ifExpr <|> ann <|> abs <|> app <|> expr <|> parens
+  return statement
   where isVar (TVar _) = True
         isVar _ = False
 
@@ -35,5 +37,4 @@ parseExpr :: [Token] -> Maybe Expr
 
 parseExpr tokens = case fullParses (parser tokenGrammar) tokens of
   ([e], _) -> Just e
-  ([], _)  -> Nothing
   _        -> Nothing

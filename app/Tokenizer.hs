@@ -16,6 +16,8 @@ data Token = TTrue
            | TArrow
            | TLambda
            | TDot
+           | TLPar
+           | TRPar
            deriving (Show, Eq)
 
 trueParser :: Parser Token
@@ -45,6 +47,8 @@ tokenParser = try (string "true" >> return TTrue) <|>
               try (string "->" >> return TArrow) <|>
               try (string "\\" >> return TLambda) <|>
               try (string "." >> return TDot) <|>
+              try (string "(" >> return TLPar) <|>
+              try (string ")" >> return TRPar) <|>
               try variableParser
               
 
@@ -53,9 +57,8 @@ tokenParser = try (string "true" >> return TTrue) <|>
 tokensParser :: Parser [Token]
 tokensParser = many (tokenParser <* spaces)
 
--- Parse
-parseStr :: String -> Either ParseError [Token]
-parseStr = parse tokensParser ""
+tokenize :: String -> Either ParseError [Token]
+tokenize = parse tokensParser ""
 
 
 
