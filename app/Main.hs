@@ -1,10 +1,10 @@
 module Main where
 
-import Parser
 import Expr
 import Typechecker
 import Eval
 import Context
+import Parser
 
 
 -- Main function to test the parser and evaluator
@@ -25,3 +25,4 @@ main = do
                 print $ inferType typeCtx ex
                 -- print $ eval ctx ex
                 main
+
