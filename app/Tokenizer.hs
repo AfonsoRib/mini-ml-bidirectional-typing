@@ -5,7 +5,16 @@ import Text.Parsec.String (Parser)
 import Control.Applicative (liftA2)
 
 
-data Token = TTrue | TFalse | TIf | TThen |TElse deriving (Show, Eq)
+data Token = TTrue
+           | TFalse
+           | TIf
+           | TThen
+           | TElse
+           | TColon
+           | TBool
+           | TVar String
+           deriving (Show, Eq)
+
 
 trueParser :: Parser Token
 trueParser = string "true" >> return TTrue
@@ -19,13 +28,22 @@ ifParser = string "if" >> return TIf
 thenParser :: Parser Token
 thenParser = string "then" >> return TThen
 
+variableParser :: Parser Token
+variableParser = many1 letter >>= \x -> return (TVar x)
+
+
+
   
 tokenParser :: Parser Token
 tokenParser = try (string "true" >> return TTrue) <|>
               try (string "false" >> return TFalse) <|>
               try (string "if" >> return TIf) <|>
               try (string "then" >> return TThen) <|>
-              (string "else" >> return TElse)
+              try (string "else" >> return TElse) <|>
+              try (string ":" >> return TColon) <|>
+              try (string "Bool" >> return TBool) <|>
+              try variableParser
+              
 
 
 
