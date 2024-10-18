@@ -2,7 +2,6 @@ module Main where
 
 import Expr
 import Typechecker
-import Eval
 import Context
 import Parser
 import Tokenizer
@@ -24,12 +23,13 @@ main = do
               Right ex  -> do
                 case parseExpr ex of
                   Just expr -> do
-                    print expr
                     case inferType typeCtx expr of
                       Nothing -> do
-                        print " failed to infer type"
+                        print expr
+                        print "Either failed to infer type or not implemented"
                         main
                       Just t -> do
+                        print expr
                         print t
                         main
                   _ -> do
