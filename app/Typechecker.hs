@@ -4,7 +4,6 @@ import Expr
 import Parser
 import Context
 
-
 -- Evaluate the parsed expression to an integer or double
 inferType :: TypeContext -> Expr -> Maybe Type
 inferType _ (BoolLit _) = Just BoolType
@@ -13,24 +12,10 @@ inferType ctx (Var x) =
     Just x -> Just x
     Nothing -> Nothing   
 inferType ctx (Ann e ty) = checkType ctx e ty
-inferType ctx (Abs x t) =
-  case x of
-    Ann (Var x') ty ->
-      case inferType (addTypeVar x' ty ctx) t of
-        Just ty' -> Just (FunType ty ty')
-        Nothing -> Nothing
-    _ -> Nothing
-inferType ctx (App t1 t2) =
-  let tau2 = inferType ctx t1 in
-    let tau1 = case tau2 of
-                 Just (FunType ty1 ty2) -> Just ty1
-                 _ -> Nothing
-    in
-      case tau1 of
-        Just ty1 -> case checkType ctx t2 ty1 of
-                      Just ty2 -> Just ty2
-                      Nothing -> Nothing
-        Nothing -> Nothing
+inferType ctx (App t1 t2) = do
+  FunType ty1 ty2 <- inferType ctx t1
+  checkType ctx t2 ty1
+  return ty2
 inferType _ _ = Nothing
 
 
