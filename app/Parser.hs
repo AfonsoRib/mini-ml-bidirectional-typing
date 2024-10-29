@@ -59,29 +59,32 @@ parensType = do
 ifStatement :: Parser Expr
 ifStatement = do
   lexeme $ string "if"
-  cond <- statement
+  cond <- expression
   lexeme $ string "then"
-  t <- statement
+  t <- expression
   lexeme $ string "else"
-  f <- statement
+  f <- expression
   return $ If cond t f
 
 -- Parser for functions
 function :: Parser Expr
 function = do
-  lexeme $ string "Lambda"
+  lexeme $ string "\\"
   var <- variable
   lexeme $ string "."
   body <- statement
   return $ Abs var body
 
--- -- Parser for function application
--- application :: Parser Expr
--- application = do
---   f <- statement
---   x <- statement
---   return $ App f x
+-- Parser for function application
+application :: Parser Expr
+application = chainl1 (lexeme expression) (return App)
 
+application' :: Parser Expr
+application' = do
+  f <- statement
+  arg <- expression
+  return $ App f arg
+  
 -- Parser for parens
 parens :: Parser Expr
 parens = do
@@ -92,10 +95,13 @@ parens = do
 
 -- Parser for expressions
 statement :: Parser Expr
-statement = try annotation <|>
-            try function <|>
-            try ifStatement <|>
-            try expression
+statement =
+  try function <|>
+  try annotation <|>
+  try ifStatement <|>
+  try application <|>
+  try expression
+
 
 -- parse expr
 parseExpr :: String -> Either ParseError Expr
