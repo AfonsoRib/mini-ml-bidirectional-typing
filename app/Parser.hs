@@ -28,7 +28,7 @@ boolean = (lexeme $ string "True" >> return (BoolLit True)) <|> (lexeme $ string
 
 -- Parser for terms
 expression :: Parser Expr
-expression = try boolean <|> try variable <|> try parens
+expression =  try parens <|> try boolean <|> try variable
 
 -- Parser for basic types
 basicType :: Parser Type
@@ -36,15 +36,11 @@ basicType = (lexeme (string "Bool") >> return BoolType)
 
 -- Parser for function types
 functionType :: Parser Type
-functionType = do
-  argType <- basicType <|> parensType
-  lexeme $ string "->"
-  returnType <- typeExpr
-  return $ FunType argType returnType
+functionType = chainr1 (try basicType <|> try parensType) (lexeme $ string "->" >> return FunType)
 
 -- Parser for types (basic or function)
 typeExpr :: Parser Type
-typeExpr = try functionType <|> basicType <|> parensType
+typeExpr =   try functionType <|> try parensType <|> try basicType
 
 -- Parser for types within parentheses
 parensType :: Parser Type
