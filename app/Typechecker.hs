@@ -20,6 +20,17 @@ inferType ctx (Abs x t) =
         Just ty' -> Just (FunType ty ty')
         Nothing -> Nothing
     _ -> Nothing
+inferType ctx (App t1 t2) =
+  let tau2 = inferType ctx t1 in
+    let tau1 = case tau2 of
+                 Just (FunType ty1 ty2) -> Just ty1
+                 _ -> Nothing
+    in
+      case tau1 of
+        Just ty1 -> case checkType ctx t2 ty1 of
+                      Just ty2 -> Just ty2
+                      Nothing -> Nothing
+        Nothing -> Nothing
 inferType _ _ = Nothing
 
 
