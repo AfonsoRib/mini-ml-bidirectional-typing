@@ -19,6 +19,8 @@ inferType ctx (Abs x t) =
       case inferType (addTypeVar x' ty ctx) t of
         Just ty' -> Just (FunType ty ty')
         Nothing -> Nothing
+    _ -> Nothing
+inferType _ _ = Nothing
 
 
 checkType :: TypeContext -> Expr -> Type -> Maybe Type
@@ -29,7 +31,7 @@ checkType ctx (If t1 t2 t3) ty =
     (Just BoolType, Just ty1, Just ty2) -> Just ty
     _ -> Nothing
 checkType ctx (Abs (Var x) body) (FunType ty1 ty2) =
-  case inferType (addTypeVar x ty1 ctx) body of
+  case checkType (addTypeVar x ty1 ctx) body ty2 of
     Just ty2' -> if ty2 == ty2' then Just (FunType ty1 ty2) else Nothing
     Nothing -> Nothing
 checkType ctx (Abs _ _) _ = Nothing
