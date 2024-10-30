@@ -12,10 +12,10 @@ inferType ctx (Var x) =
     Just x -> Just x
     Nothing -> Nothing   
 inferType ctx (Ann e ty) = checkType ctx e ty
-inferType ctx (App t1 t2) = do
-  FunType ty1 ty2 <- inferType ctx t1
-  checkType ctx t2 ty1
-  return ty2
+inferType ctx (App f arg) = do
+  FunType argType retType <- inferType ctx f
+  t <-  checkType ctx arg argType
+  if t == argType then Just retType else Nothing
 inferType _ _ = Nothing
 
 
